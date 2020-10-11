@@ -1295,12 +1295,19 @@ void gait_belly(int turn, int reverse, int hipforward, int hipbackward, int knee
 #define G_FIGHT 6
 #define G_TEETER 7
 #define G_BALLET 8
+#define G_TURN_LFT 9
+#define G_TURN_RGT 10
+#define G_LOOK_AROUND 11
+#define G_JUMP_BACK 12
+#define G_WALK 13
 
-#define G_NUMGATES 9
+#define G_NUMGATES 13
 
 int curGait = G_STAND;
 int curReverse = 0;
 unsigned long nextGaitTime = 0;
+int range = 0;
+int turn_timer = 0;
 
 void random_gait(int timingfactor) {
 
@@ -1315,47 +1322,120 @@ void random_gait(int timingfactor) {
 
     // when switching demo modes, briefly go into a standing position so 
     // we're starting at the same position every time.
-    setLeg(ALL_LEGS, HIP_NEUTRAL, KNEE_STAND, 0);
-    delay(600);
+    //setLeg(ALL_LEGS, HIP_NEUTRAL, KNEE_STAND, 0);
+    //delay(600);
   }
-
-  switch (curGait) {
-    case G_STAND:
-      stand();
-      break;
-    case G_TURN:
-      turn(1, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 700
-      break;
-    case G_TRIPOD:
-      gait_tripod(1, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 900
-      break;
-    case G_SCAMPER:
-      gait_tripod_scamper((nextGaitTime-(millis())<GATETIME/2),0);  // reverse direction halfway through
-      break;
-    case G_DANCE:
-      stand();
-      for (int i = 0; i < NUM_LEGS; i++) 
-        setHipRaw(i, 145);
-      delay(350);
-      for (int i = 0; i < NUM_LEGS; i++)
-        setHipRaw(i, 35);
-      delay(350);
-      break;
-    case G_BOOGIE:
-       boogie_woogie(NO_LEGS, SUBMODE_1, 2);
-       break;
-    case G_FIGHT:
-      fight_mode('w', SUBMODE_1, FIGHT_CYCLE_TIME);
-      break;
-
-    case G_TEETER:
-      wave('r');
-      break;
-
-    case G_BALLET:
-      flutter();
-      break;
-  } 
+  //Eric
+  while(Dialmode == DIALMODE_DEMO)
+  {
+      int p = analogRead(A0);
+      int factor = 1;
+  
+    if (p < 50) {
+      Dialmode = DIALMODE_STAND;
+    } else if (p < 150) {
+      Dialmode = DIALMODE_ADJUST;
+    } else if (p < 300) {
+      Dialmode = DIALMODE_TEST;
+    } else if (p < 750) {
+      Dialmode = DIALMODE_DEMO;
+    } else if (p < 950) {
+      Dialmode = DIALMODE_RC_GRIPARM;
+    } else {
+      Dialmode = DIALMODE_RC;
+    }
+    //curGait = G_WALK;
+    int range = readUltrasonic();
+    if (range<45){
+      curGait = G_TURN_LFT;
+    }
+    else{
+      curGait = G_WALK;    
+    }
+  
+    if (range<20){
+      curGait = G_JUMP_BACK;
+    }
+    switch (curGait) {
+      case G_STAND:
+        stand();
+        break;
+      case G_TURN:
+        turn(0, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 700
+        break;
+      case G_TRIPOD:
+        gait_tripod(1, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 900
+        break;
+      case G_SCAMPER:
+        gait_tripod_scamper((nextGaitTime-(millis())<GATETIME/2),0);  // reverse direction halfway through
+        break;
+      case G_DANCE:
+        stand();
+        for (int i = 0; i < NUM_LEGS; i++) 
+          setHipRaw(i, 145);
+        delay(350);
+        for (int i = 0; i < NUM_LEGS; i++)
+          setHipRaw(i, 35);
+        delay(350);
+        break;
+      case G_BOOGIE:
+         boogie_woogie(NO_LEGS, SUBMODE_1, 2);
+         break;
+      case G_FIGHT:
+        fight_mode('w', SUBMODE_1, FIGHT_CYCLE_TIME);
+        break;
+      case G_TEETER:
+        wave('r');
+        break;
+      case G_BALLET:
+        flutter();
+        break;
+  
+      
+      case G_TURN_LFT:  
+        Serial.print("G_TURN_LFT");
+        turn_timer = 0;
+        while(turn_timer<350){
+          turn_timer = turn_timer + 1;
+          turn(0, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 700 
+        }
+        break;
+      case G_TURN_RGT:
+        Serial.print("G_TURN_RGT");            
+        turn_timer = 0;
+        while(turn_timer<350){
+          turn_timer = turn_timer + 1;
+          turn(1, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 700  
+        }   
+        break;
+      case G_LOOK_AROUND:
+        Serial.print("G_LOOK_AROUND");
+        break;
+      case G_JUMP_BACK:
+        Serial.print("G_JUMP_BACK");
+        //SCAMPER BACK
+        turn_timer = 0;
+        while(turn_timer<200){
+          turn_timer = turn_timer + 1;
+          gait_tripod_scamper(1,0);  // reverse direction halfway through
+        }
+        //TURN RIGHT
+        turn_timer = 0;
+        while(turn_timer<600){
+          turn_timer = turn_timer + 1;
+          turn(1, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 700  
+        }
+        break;
+      case G_WALK:
+        Serial.print("G_WALK");
+        turn_timer = 0;
+        while(turn_timer<300) {
+          turn_timer = turn_timer + 1;
+          gait_tripod(0, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, 1200); // 900 TRIPOD_CYCLE_TIME        turn_timer = millis(); 
+        }  
+        break;
+    } 
+  }
 }
 
 void foldup() {
@@ -1780,7 +1860,7 @@ unsigned int readUltrasonic() {  // returns number of centimeters from ultrasoni
   
   unsigned int duration = pulseIn(ULTRAINPUTPIN, HIGH, 18000);  // maximum 18 milliseconds which would be about 10 feet distance from object
 
-  //Serial.print("ultra cm:"); Serial.println(duration/58);
+  Serial.print("ultra cm:"); Serial.println(duration/58);
   
   if (duration <100) { // Either 0 means timed out, or less than 2cm is out of range as well
     return 1000;   // we will use this large value to mean out of range, since 400 cm is the manufacturer's max range published
