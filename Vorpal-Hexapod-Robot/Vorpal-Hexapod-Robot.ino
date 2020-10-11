@@ -1346,14 +1346,14 @@ void random_gait(int timingfactor) {
     }
     //curGait = G_WALK;
     int range = readUltrasonic();
-    if (range<45){
+    if (range<30){
       curGait = G_TURN_LFT;
     }
     else{
       curGait = G_WALK;    
     }
   
-    if (range<20){
+    if (range<15){
       curGait = G_JUMP_BACK;
     }
     switch (curGait) {
@@ -1395,17 +1395,17 @@ void random_gait(int timingfactor) {
       case G_TURN_LFT:  
         Serial.print("G_TURN_LFT");
         turn_timer = 0;
-        while(turn_timer<350){
+        while(turn_timer<600){
           turn_timer = turn_timer + 1;
-          turn(0, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 700 
+          turn(0, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, 1000); // 700 
         }
         break;
       case G_TURN_RGT:
         Serial.print("G_TURN_RGT");            
         turn_timer = 0;
-        while(turn_timer<350){
+        while(turn_timer<600){
           turn_timer = turn_timer + 1;
-          turn(1, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 700  
+          turn(1, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, 1000); // 700  
         }   
         break;
       case G_LOOK_AROUND:
@@ -1421,7 +1421,7 @@ void random_gait(int timingfactor) {
         }
         //TURN RIGHT
         turn_timer = 0;
-        while(turn_timer<600){
+        while(turn_timer<1500){
           turn_timer = turn_timer + 1;
           turn(1, HIP_FORWARD, HIP_BACKWARD, KNEE_NEUTRAL, KNEE_DOWN, TRIPOD_CYCLE_TIME); // 700  
         }
