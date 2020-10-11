@@ -1346,14 +1346,14 @@ void random_gait(int timingfactor) {
     }
     //curGait = G_WALK;
     int range = readUltrasonic();
-    if (range<30){
+    if (range<40){
       curGait = G_TURN_LFT;
     }
     else{
       curGait = G_WALK;    
     }
   
-    if (range<15){
+    if (range<20){
       curGait = G_JUMP_BACK;
     }
     switch (curGait) {
